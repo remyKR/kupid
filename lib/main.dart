@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'screens/start_screen.dart';
-import 'screens/login_email.dart';
-import 'screens/join_email.dart';
+import 'screens/startScreen.dart';
+import 'screens/loginEmail.dart';
+import 'screens/joinEmail.dart';
+import 'screens/signupProfileName.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,8 +21,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routes: {
-        '/login_email': (context) => const login_email(),
+        '/login_email': (context) => const loginEmail(),
         '/join_email': (context) => const JoinEmailScreen(),
+        '/signupProfileName': (context) => const SignupProfileNameScreen(),
       },
       home: const StartScreen(),
     );

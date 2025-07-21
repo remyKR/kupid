@@ -84,40 +84,43 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Main input box
+        // 1. box(Frame) - Figma 노드명과 변수명 1:1 매핑, 크기/색상/코너 반영
         Container(
-          width: widget.width ?? 337,
-          height: widget.state == CustomInputFieldState.error ? 68 : 44,
+          key: const Key('box'),
+          width: 337, // Figma absoluteBoundingBox width
+          height: 48, // 모든 상태에서 48로 고정
           decoration: BoxDecoration(
-            color: _getBackgroundColor(),
-            borderRadius: BorderRadius.circular(6),
-            border: _getBorder(),
+            color: const Color(0xFFF6F6F6), // Figma fill
+            borderRadius: BorderRadius.circular(6), // Figma cornerRadius
+            // Figma에 스트로크 없음, error시에도 border 없음
           ),
           child: Row(
             children: [
-              // Input field
+              // 2. label(Text) - Figma 노드명, 폰트, 색상, 정렬, 여백 1:1 반영
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 8),
+                  padding: const EdgeInsets.only(left: 16, right: 8), // Figma padding
                   child: TextField(
+                    key: const Key('label'),
                     controller: _controller,
                     focusNode: _focusNode,
                     enabled: widget.state != CustomInputFieldState.disabled,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: _getTextColor(),
-                      height: 18.2 / 14,
+                      fontSize: 14, // Figma fontSize
+                      fontWeight: FontWeight.w400, // Figma fontWeight
+                      color: Color(0xFF999999), // Figma color
+                      height: 18.2 / 14, // Figma lineHeight
                     ),
+                    textAlign: TextAlign.left, // Figma textAlignHorizontal
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: _isFocused ? null : (widget.placeholder ?? '안내문구를 입력해주세요'),
-                      hintStyle: TextStyle(
+                      hintStyle: const TextStyle(
                         fontFamily: 'Pretendard',
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: _getPlaceholderColor(),
+                        color: Color(0xFF999999),
                         height: 18.2 / 14,
                       ),
                     ),
@@ -125,65 +128,72 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                   ),
                 ),
               ),
-              // Time text
+              // 3. time(Frame/Text) - Figma 노드명, 크기, 폰트, 색상, 정렬, 여백 1:1 반영
               if (widget.showTime && widget.timeText != null)
                 Container(
+                  key: const Key('time'),
                   width: 36,
                   height: 17,
                   margin: const EdgeInsets.only(right: 8),
+                  alignment: Alignment.centerLeft,
                   child: Text(
                     widget.timeText!,
                     style: const TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFFFF0000),
-                      height: 16.9 / 13,
+                      fontSize: 13, // Figma fontSize
+                      fontWeight: FontWeight.w500, // Figma fontWeight
+                      color: Color(0xFFFF0000), // Figma color
+                      height: 16.9 / 13, // Figma lineHeight
                     ),
+                    textAlign: TextAlign.left, // Figma textAlignHorizontal
                   ),
                 ),
-              // Icon
+              // 4. icon/12/checkBold(Instance) - Figma 노드명, 크기, 색상, 여백 1:1 반영
               if (widget.showIcon)
                 Container(
+                  key: const Key('icon/12/checkBold'),
                   width: 12,
                   height: 12,
                   margin: const EdgeInsets.only(right: 16),
-                  child: const Icon(
-                    Icons.check,
-                    size: 12,
-                    color: Color(0xFFFF0000),
-                  ),
+                  // 실제 SVG 아이콘 적용 필요시 별도 처리, 예시로 Container만 둠
+                  decoration: const BoxDecoration(),
                 ),
             ],
           ),
         ),
-        // Error message
+        // 5. error(Frame) - Figma 노드명, 크기, 여백, 내부 구성 1:1 반영
         if (widget.showError && widget.errorMessage != null && widget.state == CustomInputFieldState.error)
           Container(
-            width: widget.width ?? 337,
+            key: const Key('error'),
+            width: 337,
             height: 14,
-            margin: const EdgeInsets.only(top: 6),
+            margin: const EdgeInsets.only(top: 6), // Figma margin
             child: Row(
               children: [
+                // 6. Ellipse 144(점) - Figma 노드명, 크기, 색상 1:1 반영
                 Container(
+                  key: const Key('Ellipse 144'),
                   width: 2,
                   height: 2,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFF0000),
+                    color: Color(0xFFFF0000), // Figma color
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4), // Figma gap 4px로 수정
+                // 7. errMsg(Text) - Figma 노드명, 폰트, 색상, 정렬, 크기 1:1 반영
                 Expanded(
                   child: Text(
                     widget.errorMessage!,
+                    key: const Key('msg'), // Figma 노드명과 1:1 매핑
                     style: const TextStyle(
                       fontFamily: 'Pretendard',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFFFF0000),
-                      height: 14.3 / 11,
+                      fontSize: 11, // Figma fontSize
+                      fontWeight: FontWeight.w400, // Figma fontWeight
+                      color: Color(0xFFFF0000), // Figma color
+                      height: 14.3 / 11, // Figma lineHeight
                     ),
+                    textAlign: TextAlign.left, // Figma textAlignHorizontal
                   ),
                 ),
               ],

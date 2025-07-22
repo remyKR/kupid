@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'icon_view_24.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 enum CustomInputFieldState {
   placeHolder,
@@ -22,6 +24,8 @@ class CustomInputFieldStates extends StatefulWidget {
   final TextEditingController? controller;
   final double? width;
   final FocusNode? externalFocusNode;
+  final bool obscureText;
+  final VoidCallback? onToggleVisibility;
 
   const CustomInputFieldStates({
     super.key,
@@ -38,6 +42,8 @@ class CustomInputFieldStates extends StatefulWidget {
     this.controller,
     this.width,
     this.externalFocusNode,
+    this.obscureText = false,
+    this.onToggleVisibility,
   });
 
   @override
@@ -80,6 +86,14 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
   }
 
   @override
+  void didUpdateWidget(covariant CustomInputFieldStates oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.obscureText != widget.obscureText) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,31 +114,58 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(left: 16, right: 8), // Figma padding
-                  child: TextField(
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      // 입력값이 없고 포커스가 없으면 placeholder
+                      if (_controller.text.isEmpty && !_isFocused)
+                        RichText(
+                          text: _styledText(widget.placeholder ?? '안내문구를 입력해주세요', isHint: true),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      // 입력값이 있거나 포커스가 있으면 입력값
+                      if (_controller.text.isNotEmpty || _isFocused)
+                        RichText(
+                          text: widget.obscureText
+                              ? TextSpan(
+                                  text: '•' * _controller.text.length,
+                                  style: const TextStyle(
+                                    fontFamily: 'Pretendard',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF999999),
+                                    height: 18.2 / 14,
+                                  ),
+                                )
+                              : _styledText(_controller.text),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      // 실제 입력은 투명 TextField로 처리
+                      TextField(
                     key: const Key('label'),
                     controller: _controller,
                     focusNode: _focusNode,
                     enabled: widget.state != CustomInputFieldState.disabled,
                     style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14, // Figma fontSize
-                      fontWeight: FontWeight.w400, // Figma fontWeight
-                      color: Color(0xFF999999), // Figma color
-                      height: 18.2 / 14, // Figma lineHeight
-                    ),
-                    textAlign: TextAlign.left, // Figma textAlignHorizontal
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: _isFocused ? null : (widget.placeholder ?? '안내문구를 입력해주세요'),
-                      hintStyle: const TextStyle(
-                        fontFamily: 'Pretendard',
+                          color: Colors.transparent,
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF999999),
                         height: 18.2 / 14,
                       ),
+                        cursorColor: _getTextColor(),
+                        textAlign: TextAlign.left,
+                        obscureText: widget.obscureText,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: '',
+                          isCollapsed: true,
+                          contentPadding: EdgeInsets.zero,
                     ),
                     onChanged: widget.onChanged,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -136,16 +177,11 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                   height: 17,
                   margin: const EdgeInsets.only(right: 8),
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    widget.timeText!,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13, // Figma fontSize
-                      fontWeight: FontWeight.w500, // Figma fontWeight
-                      color: Color(0xFFFF0000), // Figma color
-                      height: 16.9 / 13, // Figma lineHeight
-                    ),
-                    textAlign: TextAlign.left, // Figma textAlignHorizontal
+                  child: RichText(
+                    text: _styledText(widget.timeText!, isHint: true),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
                   ),
                 ),
               // 4. icon/12/checkBold(Instance) - Figma 노드명, 크기, 색상, 여백 1:1 반영
@@ -157,6 +193,24 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                   margin: const EdgeInsets.only(right: 16),
                   // 실제 SVG 아이콘 적용 필요시 별도 처리, 예시로 Container만 둠
                   decoration: const BoxDecoration(),
+                ),
+              if (widget.onToggleVisibility != null)
+                GestureDetector(
+                  onTap: widget.onToggleVisibility,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: IconView24(
+                        size: 24,
+                        color: widget.obscureText ? const Color(0xFFAAAAAA) : const Color(0xFF555555),
+                        alignment: Alignment.centerRight,
+                        semanticLabel: widget.obscureText ? '비밀번호 숨김' : '비밀번호 표시',
+                        assetName: widget.obscureText ? 'assets/icon/24/viewOff.svg' : 'assets/icon/24/viewOn.svg',
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -183,17 +237,21 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                 const SizedBox(width: 4), // Figma gap 4px로 수정
                 // 7. errMsg(Text) - Figma 노드명, 폰트, 색상, 정렬, 크기 1:1 반영
                 Expanded(
-                  child: Text(
+                  child: RichText(
+                    key: const Key('msg'),
+                    text: _styledText(
                     widget.errorMessage!,
-                    key: const Key('msg'), // Figma 노드명과 1:1 매핑
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 11, // Figma fontSize
-                      fontWeight: FontWeight.w400, // Figma fontWeight
-                      color: Color(0xFFFF0000), // Figma color
-                      height: 14.3 / 11, // Figma lineHeight
+                      baseStyle: const TextStyle(
+                        color: Color(0xFFFF0000),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        height: 14.3 / 11,
+                      ),
+                      isHint: true,
                     ),
-                    textAlign: TextAlign.left, // Figma textAlignHorizontal
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
                   ),
                 ),
               ],
@@ -251,6 +309,31 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
       default:
         return const Color(0xFF999999);
     }
+  }
+
+  // 입력값에 폰트 정책 적용: 영문/숫자 Poppins, 한글/특수문자 Pretendard
+  TextSpan _styledText(String text, {TextStyle? baseStyle, bool isHint = false}) {
+    final List<InlineSpan> spans = [];
+    final RegExp regex = RegExp(r'[A-Za-z0-9]+|[^A-Za-z0-9]+');
+    final matches = regex.allMatches(text);
+    for (final match in matches) {
+      final part = match.group(0)!;
+      final isEngNum = RegExp(r'^[A-Za-z0-9]+$').hasMatch(part);
+      final style = (baseStyle ?? TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: isHint ? _getPlaceholderColor() : _getTextColor(),
+        height: 18.2 / 14,
+      ));
+      spans.add(TextSpan(
+        text: part,
+        style: isEngNum
+            ? GoogleFonts.poppins().merge(style)
+            : style.copyWith(fontFamily: 'Pretendard'),
+      ));
+    }
+    return TextSpan(children: spans);
   }
 }
 

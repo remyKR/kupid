@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'icon_view_24.dart';
 
 class CustomInputField extends StatefulWidget {
   final String? placeholder;
@@ -139,9 +140,11 @@ class _CustomInputFieldState extends State<CustomInputField> {
                     child: SizedBox(
                       width: 12,
                       height: 12,
-                      child: Image.asset(
-                        'assets/icon/12/checkBold.png', // SVG라면 flutter_svg 패키지로 대체
-                        fit: BoxFit.contain,
+                      child: IconView24(
+                        size: 12,
+                        color: const Color(0xFF8A38F5),
+                        alignment: Alignment.centerRight,
+                        semanticLabel: '체크',
                       ),
                     ),
                   ),

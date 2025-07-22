@@ -111,3 +111,6 @@
 - **이 룰은 Anima, Figma-to-Code 등 모든 도구에 동일하게 적용됩니다.**
 - **레이어 가시성 확인은 `mcp_TalkToFigma_get_selection` 또는 `mcp_TalkToFigma_get_node_info`로 정확히 검증합니다.**
 - **확인되지 않은 레이어는 개발에 포함하지 않습니다.** 
+
+## 단위 및 소통 규칙
+- 모든 레이아웃, 스타일, 크기, 간격 등은 반드시 px(픽셀) 단위로 소통하고 기록한다. 

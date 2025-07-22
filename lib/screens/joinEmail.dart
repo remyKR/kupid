@@ -3,6 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kupid/styles/common_styles.dart';
 import 'package:kupid/widgets/custom_input_field_states.dart';
 import 'package:kupid/widgets/custom_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/icon_view_24.dart';
+import 'package:http/http.dart' as http;
 
 class JoinEmailScreen extends StatefulWidget {
   const JoinEmailScreen({Key? key}) : super(key: key);
@@ -25,6 +28,8 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
   String? emailError;
   String? passwordError;
   String? confirmPasswordError;
+  bool passwordVisible = false;
+  bool confirmPasswordVisible = false;
 
   @override
   void initState() {
@@ -75,28 +80,119 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
     super.dispose();
   }
 
-  // 1. buildInputWithError 메서드 추가
-  Widget buildInputWithError({
-    required Widget input,
-    String? error,
-  }) {
-    if (error != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          input,
-          const SizedBox(height: 8),
-          Text(error, style: const TextStyle(color: Colors.red, fontSize: 13)),
-          const SizedBox(height: 4), // 8+4=12
-        ],
+  Future<void> _registerWithEmail() async {
+    setState(() {
+      emailError = null;
+      passwordError = null;
+      confirmPasswordError = null;
+      errorMessage = null;
+    });
+
+    if (emailController.text.isEmpty) {
+      setState(() => emailError = '이메일을 입력하세요.');
+      return;
+    }
+    // 이메일 형식 검사
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(emailController.text.trim())) {
+      setState(() => emailError = '올바른 이메일 주소를 입력하세요.');
+      return;
+    }
+    if (passwordController.text.isEmpty) {
+      setState(() => passwordError = '비밀번호를 입력하세요.');
+      return;
+    }
+    // 비밀번호 길이(6~10자)만 검사
+    if (passwordController.text.length < 6 || passwordController.text.length > 10) {
+      setState(() => passwordError = '6자 이상 10자 이하로 입력해주세요');
+      return;
+    }
+    if (confirmPasswordController.text.isEmpty) {
+      setState(() => confirmPasswordError = '비밀번호 확인을 입력하세요.');
+      return;
+    }
+    // 비밀번호 확인도 길이만 검사
+    if (confirmPasswordController.text.length < 6 || confirmPasswordController.text.length > 10) {
+      setState(() => confirmPasswordError = '6자 이상 10자 이하로 입력해주세요');
+      return;
+    }
+    if (passwordController.text != confirmPasswordController.text) {
+      setState(() => confirmPasswordError = '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    try {
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
-    } else {
-      return Column(
-        children: [
-          input,
-          const SizedBox(height: 12),
-        ],
+      setState(() {
+        errorMessage = null;
+      });
+      // 이메일 인증 메일 발송
+      final user = credential.user;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        if (mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('이메일 인증'),
+              content: const Text('입력하신 이메일로 인증 메일이 발송되었습니다.\n이메일 인증 후 다시 로그인해 주세요.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('확인'),
+                ),
+              ],
+            ),
+          );
+        }
+        // 인증 전에는 로그인/다음 단계로 이동하지 않음
+        return;
+      }
+      // 서버에 회원가입 데이터 전송
+      await sendSignupDataToServer(emailController.text.trim());
+      // 회원가입 성공 시 프로필 이름 입력 페이지로 이동
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/signupProfileName');
+      }
+      // TODO: 회원가입 성공 후 이동/알림 등 추가 가능
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('이미 회원기입이 완료된 계정입니다.'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          await Future.delayed(const Duration(milliseconds: 1500));
+          Navigator.pushReplacementNamed(context, '/login_email');
+        }
+      } else {
+      setState(() {
+        errorMessage = e.message;
+      });
+      }
+    }
+  }
+
+  Future<void> sendSignupDataToServer(String email) async {
+    // 실제 서버 URL로 교체 필요
+    const url = 'https://your-server.com/api/signup';
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: '{"email": "$email"}',
       );
+      if (response.statusCode != 200) {
+        throw Exception('서버 전송 실패');
+      }
+    } catch (e) {
+      // 서버 전송 실패 시 에러 처리(필요시)
     }
   }
 
@@ -113,8 +209,8 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start, // align-items: flex-start
+                mainAxisAlignment: MainAxisAlignment.start,   // flex-direction: column
                 children: [
                   const SizedBox(height: 44),
                   Row(
@@ -146,160 +242,108 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
                     ],
                   ),
                   const SizedBox(height: 32),
+                  // inputs_wrapper 레이아웃 정보 반영
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start, // align-items: flex-start
+                    mainAxisAlignment: MainAxisAlignment.start,   // flex-direction: column
                     children: [
-                      // inputs_wrapper(3개 입력 필드 전체) gap을 20px로 적용
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          buildInputWithError(
-                            input: CustomInputFieldStates(
-                              state: emailError != null ? CustomInputFieldState.error : emailState,
-                              placeholder: 'e-mail 주소를 입력하세요',
-                              showIcon: false,
-                              showTime: false,
-                              showError: emailError != null,
-                              errorMessage: emailError,
-                              width: 342,
-                              externalFocusNode: emailFocusNode,
-                              controller: emailController,
-                              onChanged: (value) {
-                                setState(() {
-                                  if (value.isEmpty) {
-                                    emailState = CustomInputFieldState.placeHolder;
-                                  } else {
-                                    emailState = CustomInputFieldState.defaultState;
-                                  }
-                                });
-                              },
-                            ),
-                            error: emailError,
-                          ),
-                          const SizedBox(height: 20), // inputs_wrapper gap 20px
-                          buildInputWithError(
-                            input: CustomInputFieldStates(
-                              state: passwordError != null ? CustomInputFieldState.error : passwordState,
-                              placeholder: '비밀번호를 입력하세요.',
-                              showIcon: false,
-                              showTime: false,
-                              showError: passwordError != null,
-                              errorMessage: passwordError,
-                              width: 342,
-                              externalFocusNode: passwordFocusNode,
-                              controller: passwordController,
-                              onChanged: (value) {
-                                setState(() {
-                                  if (value.isEmpty) {
-                                    passwordState = CustomInputFieldState.placeHolder;
-                                  } else {
-                                    passwordState = CustomInputFieldState.defaultState;
-                                  }
-                                });
-                              },
-                            ),
-                            error: passwordError,
-                          ),
-                          const SizedBox(height: 20), // inputs_wrapper gap 20px
-                          buildInputWithError(
-                            input: CustomInputFieldStates(
-                              state: confirmPasswordError != null ? CustomInputFieldState.error : confirmPasswordState,
-                              placeholder: '비밀번호를 다시 입력하세요',
-                              showIcon: false,
-                              showTime: false,
-                              showError: confirmPasswordError != null,
-                              errorMessage: confirmPasswordError,
-                              width: 342,
-                              externalFocusNode: confirmPasswordFocusNode,
-                              controller: confirmPasswordController,
-                              onChanged: (value) {
-                                setState(() {
-                                  if (value.isEmpty) {
-                                    confirmPasswordState = CustomInputFieldState.placeHolder;
-                                  } else {
-                                    confirmPasswordState = CustomInputFieldState.defaultState;
-                                  }
-                                });
-                              },
-                            ),
-                            error: confirmPasswordError,
-                          ),
-                        ],
-                      ),
-                      if (emailError != null || passwordError != null || confirmPasswordError != null) ...[
-                        const SizedBox(height: 12), // Figma gap
-                      ],
-                      SizedBox(
-                        width: 342,
-                        height: 48,
-                        child: CustomButton(
-                          label: '이메일로 회원가입',
-                          color: ButtonColorTheme.dark,
-                          borderRadius: 4,
-                          fontFamily: 'Pretendard',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          onPressed: () {
+                      CustomInputFieldStates(
+                          state: emailError != null ? CustomInputFieldState.error : emailState,
+                          placeholder: 'e-mail 주소를 입력하세요',
+                          showIcon: false,
+                          showTime: false,
+                          showError: emailError != null,
+                          errorMessage: emailError,
+                          width: 342,
+                          externalFocusNode: emailFocusNode,
+                          controller: emailController,
+                          onChanged: (value) {
                             setState(() {
-                              errorMessage = null;
-                              emailError = null;
-                              passwordError = null;
-                              confirmPasswordError = null;
+                              if (value.isEmpty) {
+                                emailState = CustomInputFieldState.placeHolder;
+                              } else {
+                                emailState = CustomInputFieldState.defaultState;
+                              }
                             });
-                            final email = emailController.text.trim();
-                            final password = passwordController.text;
-                            final confirmPassword = confirmPasswordController.text;
-                            final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                            bool hasError = false;
-                            if (email.isEmpty) {
-                              emailError = '이메일을 입력하세요.';
-                              hasError = true;
-                            } else if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-                              emailError = '올바른 이메일 주소를 입력하세요.';
-                              hasError = true;
-                            }
-                            if (password.isEmpty) {
-                              passwordError = '비밀번호를 입력하세요.';
-                              hasError = true;
-                            } else if (password.length < 8) {
-                              passwordError = '비밀번호는 8자 이상이어야 합니다.';
-                              hasError = true;
-                            }
-                            if (confirmPassword.isEmpty) {
-                              confirmPasswordError = '비밀번호 확인을 입력하세요.';
-                              hasError = true;
-                            } else if (password != confirmPassword) {
-                              confirmPasswordError = '비밀번호가 일치하지 않습니다.';
-                              hasError = true;
-                            }
-                            if (hasError) {
-                              setState(() {});
-                              return;
-                            }
-                            // 실제 회원가입 로직은 추후 추가
-                            // 임시: 성공 메시지
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('회원가입 성공'),
-                                content: Text('이메일: $email'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context); // 팝업 닫기
-                                      Navigator.pushNamed(context, '/signupProfileName');
-                                    },
-                                    child: const Text('확인'),
-                                  ),
-                                ],
-                              ),
-                            );
                           },
                         ),
+                      const SizedBox(height: 12),
+                      CustomInputFieldStates(
+                          state: passwordError != null ? CustomInputFieldState.error : passwordState,
+                        placeholder: '비밀번호를 6-10자로 입력해주세요',
+                          showIcon: false,
+                          showTime: false,
+                          showError: passwordError != null,
+                          errorMessage: passwordError,
+                          width: 342,
+                          externalFocusNode: passwordFocusNode,
+                          controller: passwordController,
+                        obscureText: !passwordVisible,
+                        onToggleVisibility: () {
+                          setState(() {
+                            passwordVisible = !passwordVisible;
+                          });
+                        },
+                          onChanged: (value) {
+                            setState(() {
+                              if (value.isEmpty) {
+                                passwordState = CustomInputFieldState.placeHolder;
+                              } else {
+                                passwordState = CustomInputFieldState.defaultState;
+                              }
+                            });
+                          },
+                        ),
+                      const SizedBox(height: 12),
+                      CustomInputFieldStates(
+                          state: confirmPasswordError != null ? CustomInputFieldState.error : confirmPasswordState,
+                        placeholder: '비밀번호를 재입력 해 주세요',
+                          showIcon: false,
+                          showTime: false,
+                          showError: confirmPasswordError != null,
+                          errorMessage: confirmPasswordError,
+                          width: 342,
+                          externalFocusNode: confirmPasswordFocusNode,
+                          controller: confirmPasswordController,
+                        obscureText: !confirmPasswordVisible,
+                        onToggleVisibility: () {
+                          setState(() {
+                            confirmPasswordVisible = !confirmPasswordVisible;
+                          });
+                        },
+                          onChanged: (value) {
+                            setState(() {
+                              if (value.isEmpty) {
+                                confirmPasswordState = CustomInputFieldState.placeHolder;
+                              } else {
+                                confirmPasswordState = CustomInputFieldState.defaultState;
+                              }
+                            });
+                          },
                       ),
                     ],
+                  ),
+                  // align-self: stretch (width: double.infinity)
+                  const SizedBox(height: 24),
+                  if (errorMessage != null) ...[
+                    SizedBox(height: 12),
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: CustomButton(
+                      label: '회원가입',
+                      color: ButtonColorTheme.dark,
+                      borderRadius: 4,
+                      fontFamily: 'Pretendard',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      onPressed: _registerWithEmail,
+                    ),
                   ),
                 ],
               ),
@@ -309,4 +353,4 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
       ),
     );
   }
-} 
+}

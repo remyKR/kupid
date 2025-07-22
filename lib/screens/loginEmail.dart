@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kupid/styles/common_styles.dart';
 import 'package:kupid/widgets/custom_input_field_states.dart';
 import 'package:kupid/widgets/custom_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class loginEmail extends StatefulWidget {
   const loginEmail({Key? key}) : super(key: key);
@@ -21,34 +22,33 @@ class _loginEmailState extends State<loginEmail> {
   String? errorMessage;
   String? emailError;
   String? passwordError;
+  bool passwordVisible = false;
 
   @override
   void initState() {
     super.initState();
     emailFocusNode.addListener(() {
-      if (!emailFocusNode.hasFocus) {
         setState(() {
-          // focus out 시 텍스트 유무에 따라 상태 결정
-          if (emailController.text.isEmpty) {
+        if (emailFocusNode.hasFocus) {
+          emailState = CustomInputFieldState.focused;
+        } else if (emailController.text.isEmpty) {
             emailState = CustomInputFieldState.placeHolder;
           } else {
             emailState = CustomInputFieldState.defaultState;
           }
         });
-      }
     });
     
     passwordFocusNode.addListener(() {
-      if (!passwordFocusNode.hasFocus) {
         setState(() {
-          // focus out 시 텍스트 유무에 따라 상태 결정
-          if (passwordController.text.isEmpty) {
+        if (passwordFocusNode.hasFocus) {
+          passwordState = CustomInputFieldState.focused;
+        } else if (passwordController.text.isEmpty) {
             passwordState = CustomInputFieldState.placeHolder;
           } else {
             passwordState = CustomInputFieldState.defaultState;
           }
         });
-      }
     });
   }
 
@@ -125,7 +125,8 @@ class _loginEmailState extends State<loginEmail> {
                             placeholder: 'e-mail 주소를 입력하세요',
                             showIcon: false,
                             showTime: false,
-                            showError: false,
+                            showError: emailError != null,
+                            errorMessage: emailError,
                             width: 342,
                             externalFocusNode: emailFocusNode,
                             controller: emailController,
@@ -145,10 +146,17 @@ class _loginEmailState extends State<loginEmail> {
                             placeholder: '비밀번호를 입력하세요.',
                             showIcon: false,
                             showTime: false,
-                            showError: false,
+                            showError: passwordError != null,
+                            errorMessage: passwordError,
                             width: 342,
                             externalFocusNode: passwordFocusNode,
                             controller: passwordController,
+                            obscureText: !passwordVisible,
+                            onToggleVisibility: () {
+                              setState(() {
+                                passwordVisible = !passwordVisible;
+                              });
+                            },
                             onChanged: (value) {
                               setState(() {
                                 if (value.isEmpty) {
@@ -184,17 +192,21 @@ class _loginEmailState extends State<loginEmail> {
                             bool hasError = false;
                             if (email.isEmpty) {
                               emailError = '이메일을 입력하세요.';
+                              emailState = CustomInputFieldState.error;
                               hasError = true;
                             } else if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
                               emailError = '올바른 이메일 주소를 입력하세요.';
+                              emailState = CustomInputFieldState.error;
                               hasError = true;
+                            } else {
+                              emailState = CustomInputFieldState.defaultState;
                             }
                             if (password.isEmpty) {
                               passwordError = '비밀번호를 입력하세요.';
+                              passwordState = CustomInputFieldState.error;
                               hasError = true;
-                            } else if (password.length < 8) {
-                              passwordError = '비밀번호는 8자 이상이어야 합니다.';
-                              hasError = true;
+                            } else {
+                              passwordState = CustomInputFieldState.defaultState;
                             }
                             if (hasError) {
                               setState(() {});
@@ -202,6 +214,10 @@ class _loginEmailState extends State<loginEmail> {
                             }
                             // 실제 인증 로직은 추후 추가
                             // 임시: 성공 메시지
+                            FirebaseAuth.instance.signInWithEmailAndPassword(
+                              email: email,
+                              password: password,
+                            ).then((_) {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -215,28 +231,56 @@ class _loginEmailState extends State<loginEmail> {
                                 ],
                               ),
                             );
+                            }).catchError((e) {
+                              if (e is FirebaseAuthException && e.code == 'wrong-password') {
+                                setState(() {
+                                  passwordError = '비밀번호가 일치하지 않습니다';
+                                  passwordState = CustomInputFieldState.error;
+                                });
+                              } else if (e is FirebaseAuthException && e.code == 'user-not-found') {
+                                setState(() {
+                                  emailError = '이메일 정보를 확인해주세요';
+                                  emailState = CustomInputFieldState.error;
+                                });
+                              } else if (e is FirebaseAuthException && e.code == 'invalid-email') {
+                                setState(() {
+                                  emailError = '올바른 이메일 주소를 입력하세요';
+                                  emailState = CustomInputFieldState.error;
+                                });
+                              } else if (e is FirebaseAuthException && e.code == 'too-many-requests') {
+                                setState(() {
+                                  errorMessage = '잠시 후 다시 시도해 주세요';
+                                  emailError = null;
+                                  emailState = CustomInputFieldState.defaultState;
+                                });
+                              } else if (e is FirebaseAuthException && (e.code == 'invalid-credential' || e.code == 'credential-already-in-use' || e.code == 'operation-not-allowed' || e.code == 'expired-action-code' || e.code == 'invalid-action-code')) {
+                                setState(() {
+                                  errorMessage = '인증 정보가 올바르지 않거나 만료되었습니다. 다시 시도해 주세요';
+                                  emailError = null;
+                                  emailState = CustomInputFieldState.defaultState;
+                                });
+                              } else {
+                                setState(() {
+                                  errorMessage = '알 수 없는 오류가 발생했습니다. 다시 시도해 주세요';
+                                  emailError = null;
+                                  emailState = CustomInputFieldState.defaultState;
+                                });
+                              }
+                            });
                           },
                         ),
                       ),
-                      if (emailError != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          emailError!,
-                          style: const TextStyle(color: Colors.red, fontSize: 13),
-                        ),
-                      ],
-                      if (passwordError != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          passwordError!,
-                          style: const TextStyle(color: Colors.red, fontSize: 13),
-                        ),
-                      ],
-                      if (errorMessage != null) ...[
+                      // 로그인 버튼 아래 12px 아래 글로벌 에러 메시지
+                      if ((errorMessage ?? '').isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Text(
                           errorMessage!,
-                          style: const TextStyle(color: Colors.red, fontSize: 13),
+                          style: const TextStyle(
+                            color: Color(0xFFFF0000),
+                            fontFamily: 'Pretendard',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 16),

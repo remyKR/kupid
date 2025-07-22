@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/custom_button.dart';
 import '../styles/common_styles.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'dart:io' show Platform;
 
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
@@ -58,6 +62,66 @@ class _StartScreenState extends State<StartScreen> with TickerProviderStateMixin
     _fadeController.dispose();
     _timer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    if (!(Platform.isIOS || Platform.isAndroid)) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('지원하지 않는 플랫폼'),
+          content: const Text('구글 로그인은 모바일(iOS/Android)에서만 지원됩니다.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))],
+        ),
+      );
+      return;
+    }
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // 로그인 취소
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/signupProfileName');
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('구글 로그인 실패'),
+          content: Text(e.toString()),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))],
+        ),
+      );
+    }
+  }
+
+  Future<void> _signInWithApple(BuildContext context) async {
+    try {
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+      );
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+      await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/signupProfileName');
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('애플 로그인 실패'),
+          content: Text(e.toString()),
+          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('확인'))],
+        ),
+      );
+    }
   }
 
   @override
@@ -207,7 +271,7 @@ class _StartScreenState extends State<StartScreen> with TickerProviderStateMixin
                                             fontWeight: FontWeight.w700,
                                             fontSize: 13,
                                             onPressed: () {
-                                              print('구글 버튼 클릭');
+                                              _signInWithGoogle(context);
                                             },
                                           ),
                                           const SizedBox(height: 10),
@@ -225,7 +289,7 @@ class _StartScreenState extends State<StartScreen> with TickerProviderStateMixin
                                             fontWeight: FontWeight.w700,
                                             fontSize: 13,
                                             onPressed: () {
-                                              print('애플 버튼 클릭');
+                                              _signInWithApple(context);
                                             },
                                           ),
                                         ],

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "917634801321",
+    "project_id": "kupid-4a5a4",
+    "storage_bucket": "kupid-4a5a4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917634801321:android:6ae3bd7f55949397a013b8",
+        "android_client_info": {
+          "package_name": "com.example.kupid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzw38bGdTd6h6uPg-Y2mZjRi7r9BLgc4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

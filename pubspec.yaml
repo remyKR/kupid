@@ -74,6 +74,7 @@ flutter:
     - assets/images/bottle.png
     - assets/icon/tabBar/
     - assets/icon/
+    - assets/icon/24/
     - assets/icon/24/google.png
     - assets/icon/24/apple.png
     - assets/icon/40/

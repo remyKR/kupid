@@ -144,7 +144,7 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                         ),
                       // 실제 입력은 투명 TextField로 처리
                       TextField(
-                    key: const Key('label'),
+                    key: ValueKey(widget.obscureText),
                     controller: _controller,
                     focusNode: _focusNode,
                     enabled: widget.state != CustomInputFieldState.disabled,
@@ -184,17 +184,8 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                     textAlign: TextAlign.left,
                   ),
                 ),
-              // 4. icon/12/checkBold(Instance) - Figma 노드명, 크기, 색상, 여백 1:1 반영
-              if (widget.showIcon)
-                Container(
-                  key: const Key('icon/12/checkBold'),
-                  width: 12,
-                  height: 12,
-                  margin: const EdgeInsets.only(right: 16),
-                  // 실제 SVG 아이콘 적용 필요시 별도 처리, 예시로 Container만 둠
-                  decoration: const BoxDecoration(),
-                ),
-              if (widget.onToggleVisibility != null)
+              // 4. eye on/off 또는 check 아이콘
+              if (widget.onToggleVisibility != null) ...[
                 GestureDetector(
                   onTap: widget.onToggleVisibility,
                   child: Padding(
@@ -212,6 +203,15 @@ class _CustomInputFieldStatesState extends State<CustomInputFieldStates> {
                     ),
                   ),
                 ),
+              ] else if (widget.showIcon) ...[
+                Container(
+                  key: const Key('icon/12/checkBold'),
+                  width: 12,
+                  height: 12,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: const BoxDecoration(),
+                ),
+              ],
             ],
           ),
         ),

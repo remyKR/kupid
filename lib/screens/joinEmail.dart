@@ -271,7 +271,7 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
                       CustomInputFieldStates(
                           state: passwordError != null ? CustomInputFieldState.error : passwordState,
                         placeholder: '비밀번호를 6-10자로 입력해주세요',
-                          showIcon: false,
+                          showIcon: true,
                           showTime: false,
                           showError: passwordError != null,
                           errorMessage: passwordError,
@@ -298,7 +298,7 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
                       CustomInputFieldStates(
                           state: confirmPasswordError != null ? CustomInputFieldState.error : confirmPasswordState,
                         placeholder: '비밀번호를 재입력 해 주세요',
-                          showIcon: false,
+                          showIcon: true,
                           showTime: false,
                           showError: confirmPasswordError != null,
                           errorMessage: confirmPasswordError,

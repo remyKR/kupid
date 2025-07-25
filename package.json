@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.57.0",
+    "@tothienbao6a0/figma-mcp-server": "^0.6.41",
+    "claude-talk-to-figma-mcp": "^0.6.0"
+  }
+}

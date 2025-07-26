@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_core/firebase_core.dart';
 import 'screens/startScreen.dart';
 import 'screens/loginEmail.dart';
 import 'screens/joinEmail.dart';
 import 'screens/signupProfileName.dart';
+import 'screens/signupBasicInfo.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
         '/join_email': (context) => const JoinEmailScreen(),
         '/signupProfileName': (context) => const SignupProfileNameScreen(),
       },
-      home: const StartScreen(),
+      home: const SignupBasicInfoScreen(),
     );
   }
 }

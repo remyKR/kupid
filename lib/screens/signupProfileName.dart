@@ -15,19 +15,33 @@ class _SignupProfileNameScreenState extends State<SignupProfileNameScreen> {
   CustomInputFieldState nicknameState = CustomInputFieldState.placeHolder;
   final FocusNode nicknameFocusNode = FocusNode();
   final TextEditingController nicknameController = TextEditingController();
+  String? nicknameErrorMessage;
+  bool showNicknameError = false;
 
   @override
   void initState() {
     super.initState();
     nicknameFocusNode.addListener(() {
       if (!nicknameFocusNode.hasFocus) {
-        setState(() {
-          if (nicknameController.text.isEmpty) {
-            nicknameState = CustomInputFieldState.placeHolder;
-          } else {
-            nicknameState = CustomInputFieldState.defaultState;
-          }
-        });
+        validateNickname(nicknameController.text);
+      }
+    });
+  }
+
+  void validateNickname(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        nicknameState = CustomInputFieldState.placeHolder;
+        showNicknameError = false;
+        nicknameErrorMessage = null;
+      } else if (value.length < 2 || value.length > 8) {
+        nicknameState = CustomInputFieldState.error;
+        showNicknameError = true;
+        nicknameErrorMessage = '2글자 이상 8글자 이하로 입력해주세요';
+      } else {
+        nicknameState = CustomInputFieldState.defaultState;
+        showNicknameError = false;
+        nicknameErrorMessage = null;
       }
     });
   }
@@ -91,18 +105,13 @@ class _SignupProfileNameScreenState extends State<SignupProfileNameScreen> {
                     placeholder: '닉네임을 8자 이내로 입력해주세요.',
                     showIcon: false,
                     showTime: false,
-                    showError: false,
+                    showError: showNicknameError,
+                    errorMessage: nicknameErrorMessage,
                     width: 342,
                     externalFocusNode: nicknameFocusNode,
                     controller: nicknameController,
                     onChanged: (value) {
-                      setState(() {
-                        if (value.isEmpty) {
-                          nicknameState = CustomInputFieldState.placeHolder;
-                        } else {
-                          nicknameState = CustomInputFieldState.defaultState;
-                        }
-                      });
+                      validateNickname(value);
                     },
                   ),
                   const SizedBox(height: 40),
@@ -159,7 +168,20 @@ class _SignupProfileNameScreenState extends State<SignupProfileNameScreen> {
                       fontFamily: 'Pretendard',
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
-                      onPressed: () {},
+                      onPressed: () {
+                        if (nicknameController.text.isEmpty) {
+                          setState(() {
+                            nicknameState = CustomInputFieldState.error;
+                            showNicknameError = true;
+                            nicknameErrorMessage = '2글자 이상 8글자 이하로 입력해주세요';
+                          });
+                        } else if (nicknameController.text.length < 2 || nicknameController.text.length > 8) {
+                          // 이미 에러 상태이므로 추가 작업 없음
+                        } else {
+                          // 다음 단계로 진행
+                          print('닉네임 입력 완료: ${nicknameController.text}');
+                        }
+                      },
                     ),
                   ),
                 ],

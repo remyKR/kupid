@@ -43,3 +43,38 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS specific
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Xcode derived data
+**/ios/build/
+DerivedData/
+
+# CocoaPods
+**/ios/Pods/
+**/macos/Pods/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts that cause issues
+/build/
+**/build/
+
+# Node.js (if present)
+node_modules/
+
+# API Keys and sensitive files
+**/*api_key*
+**/*API_KEY*
+**/google-services.json
+**/GoogleService-Info.plist

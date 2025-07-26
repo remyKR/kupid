@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kupid/styles/common_styles.dart';
 import 'package:kupid/widgets/custom_input_field_states.dart';
 import 'package:kupid/widgets/custom_button.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 
 class loginEmail extends StatefulWidget {
   const loginEmail({Key? key}) : super(key: key);
@@ -212,12 +212,7 @@ class _loginEmailState extends State<loginEmail> {
                               setState(() {});
                               return;
                             }
-                            // 실제 인증 로직은 추후 추가
-                            // 임시: 성공 메시지
-                            FirebaseAuth.instance.signInWithEmailAndPassword(
-                              email: email,
-                              password: password,
-                            ).then((_) {
+                            // Firebase removed - temporarily bypass authentication
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -231,42 +226,6 @@ class _loginEmailState extends State<loginEmail> {
                                 ],
                               ),
                             );
-                            }).catchError((e) {
-                              if (e is FirebaseAuthException && e.code == 'wrong-password') {
-                                setState(() {
-                                  passwordError = '비밀번호가 일치하지 않습니다';
-                                  passwordState = CustomInputFieldState.error;
-                                });
-                              } else if (e is FirebaseAuthException && e.code == 'user-not-found') {
-                                setState(() {
-                                  emailError = '이메일 정보를 확인해주세요';
-                                  emailState = CustomInputFieldState.error;
-                                });
-                              } else if (e is FirebaseAuthException && e.code == 'invalid-email') {
-                                setState(() {
-                                  emailError = '올바른 이메일 주소를 입력하세요';
-                                  emailState = CustomInputFieldState.error;
-                                });
-                              } else if (e is FirebaseAuthException && e.code == 'too-many-requests') {
-                                setState(() {
-                                  errorMessage = '잠시 후 다시 시도해 주세요';
-                                  emailError = null;
-                                  emailState = CustomInputFieldState.defaultState;
-                                });
-                              } else if (e is FirebaseAuthException && (e.code == 'invalid-credential' || e.code == 'credential-already-in-use' || e.code == 'operation-not-allowed' || e.code == 'expired-action-code' || e.code == 'invalid-action-code')) {
-                                setState(() {
-                                  errorMessage = '인증 정보가 올바르지 않거나 만료되었습니다. 다시 시도해 주세요';
-                                  emailError = null;
-                                  emailState = CustomInputFieldState.defaultState;
-                                });
-                              } else {
-                                setState(() {
-                                  errorMessage = '알 수 없는 오류가 발생했습니다. 다시 시도해 주세요';
-                                  emailError = null;
-                                  emailState = CustomInputFieldState.defaultState;
-                                });
-                              }
-                            });
                           },
                         ),
                       ),

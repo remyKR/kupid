@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kupid/styles/common_styles.dart';
 import 'package:kupid/widgets/custom_input_field_states.dart';
 import 'package:kupid/widgets/custom_button.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/icon_view_24.dart';
 import 'package:http/http.dart' as http;
 
@@ -122,60 +122,17 @@ class _JoinEmailScreenState extends State<JoinEmailScreen> {
     }
 
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      setState(() {
-        errorMessage = null;
-      });
-      // 이메일 인증 메일 발송
-      final user = credential.user;
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-        if (mounted) {
-          await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('이메일 인증'),
-              content: const Text('입력하신 이메일로 인증 메일이 발송되었습니다.\n이메일 인증 후 다시 로그인해 주세요.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('확인'),
-                ),
-              ],
-            ),
-          );
-        }
-        // 인증 전에는 로그인/다음 단계로 이동하지 않음
-        return;
-      }
+      // Firebase removed - temporarily bypass authentication
       // 서버에 회원가입 데이터 전송
       await sendSignupDataToServer(emailController.text.trim());
       // 회원가입 성공 시 프로필 이름 입력 페이지로 이동
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/signupProfileName');
       }
-      // TODO: 회원가입 성공 후 이동/알림 등 추가 가능
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('이미 회원기입이 완료된 계정입니다.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          await Future.delayed(const Duration(milliseconds: 1500));
-          Navigator.pushReplacementNamed(context, '/login_email');
-        }
-      } else {
+    } catch (e) {
       setState(() {
-        errorMessage = e.message;
+        errorMessage = e.toString();
       });
-      }
     }
   }
 

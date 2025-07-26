@@ -61,5 +61,9 @@
         <string>google</string>
         <string>com.googleusercontent.apps.635353106896-bqjrfjg2e6cfi69rq4kbr245l4o6n5jo</string>
     </array>
+    <key>NSCameraUsageDescription</key>
+    <string>프로필 사진 촬영 및 얼굴 인증을 위해 카메라 접근이 필요합니다.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>프로필 사진 선택을 위해 사진 라이브러리 접근이 필요합니다.</string>
 </dict>
 </plist>

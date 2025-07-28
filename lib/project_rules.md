@@ -167,10 +167,12 @@ GPS 인증은 위 모든 상황에서 자동으로 트리거되며, 사용자의
 - Figma에서 component로 구성된 노드는 기존에 개발된 Flutter component를 사용하여 구현합니다.
 
 ## 3.6 레이어 가시성 규칙
-- **Figma에서 `visible: false`인 모든 레이어는 개발에서 절대 제외합니다.**
+- **Figma에서 `visible: false`인 모든 레이어/프레임은 개발에서 절대 제외합니다.**
 - **Figma에서 `visible: true`이거나 `visible` 속성이 없는 레이어만 개발에 포함합니다.**
 - **사용자가 Figma에서 레이어를 자유롭게 숨길 수 있도록 보장합니다.**
-- **레이어 가시성 확인은 `mcp_TalkToFigma_get_selection` 또는 `mcp_TalkToFigma_get_node_info`로 정확히 검증합니다.**
+- **눈 아이콘이 꺼진 상태(visible=false)의 모든 요소는 Flutter 코드에서 완전히 제외합니다.**
+- **가이드라인, 주석, 메모, 템플릿 요소 등도 개발에서 제외합니다.**
+- **레이어 가시성 확인은 Figma MCP 도구로 정확히 검증한 후에만 구현합니다.**
 - **확인되지 않은 레이어는 개발에 포함하지 않습니다.**
 
 ## 3.7 Figma 작업 효율성
@@ -195,10 +197,14 @@ GPS 인증은 위 모든 상황에서 자동으로 트리거되며, 사용자의
 ## 4.2 코딩 컨벤션 규칙
 - **이 프로젝트는 camelCase 표기법을 따릅니다.**
 - 모든 변수명, 함수명, 메서드명은 camelCase로 작성합니다. (예: userName, validateEmail, showErrorMessage)
-- 클래스명은 PascalCase를 사용합니다. (예: CustomInputField, SignupScreen)
+- 클래스명과 Figma 레이어명은 PascalCase를 사용합니다. (예: CustomInputField, SignupScreen, StatusBarWidget)
 - 상수는 UPPER_SNAKE_CASE를 사용합니다. (예: MAX_LENGTH, API_BASE_URL)
 - private 메서드는 언더스코어(_) 접두사 없이 camelCase를 사용합니다.
 - 이 규칙은 모든 코드 작성에 항상 적용되며, 기존 코드 수정 시에도 반드시 준수해야 합니다.
+- **Figma와 Flutter 명명 규칙**:
+  - Figma 레이어명: PascalCase 사용 (예: StatusBarWidget, HeaderTabSection)
+  - Flutter 클래스명: PascalCase 사용 (예: StatusBarWidget, HeaderTabSection)
+  - Figma와 Flutter의 이름을 1:1로 동일하게 매칭합니다.
 
 ---
 

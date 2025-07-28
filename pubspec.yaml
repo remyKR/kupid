@@ -74,8 +74,10 @@ flutter:
     - assets/images/P.png
     - assets/images/image_container.png
     - assets/images/bottle.png
+    - assets/images/discover/
     - assets/icon/tabBar/
     - assets/icon/
+    - assets/icon/12/
     - assets/icon/24/
     - assets/icon/24/google.png
     - assets/icon/24/apple.png
@@ -102,6 +104,20 @@ flutter:
           weight: 800
         - asset: assets/fonts/Pretendard-Black.otf
           weight: 900
+    - family: Funnel Display
+      fonts:
+        - asset: assets/fonts/FunnelDisplay-Light.ttf
+          weight: 300
+        - asset: assets/fonts/FunnelDisplay-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/FunnelDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/FunnelDisplay-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/FunnelDisplay-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/FunnelDisplay-ExtraBold.ttf
+          weight: 800
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

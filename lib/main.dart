@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 // import 'package:firebase_core/firebase_core.dart';
+import 'screens/discover.dart';
 import 'screens/startScreen.dart';
 import 'screens/loginEmail.dart';
 import 'screens/joinEmail.dart';
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/join_email': (context) => const JoinEmailScreen(),
         '/signupProfileName': (context) => const SignupProfileNameScreen(),
       },
-      home: const SignupBasicInfoScreen(),
+      home: const DiscoverScreen(),
     );
   }
 }

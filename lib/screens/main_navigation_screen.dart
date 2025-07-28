@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navigation.dart';
-import 'discover_screen.dart';
+import 'discover.dart';
 import 'near_screen.dart';
 import 'travel_screen.dart';
 import 'community_screen.dart';
